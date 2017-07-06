@@ -47,21 +47,33 @@ app.post('/trackings', (req, res, next) => {
 
   debug('inserting new event', req.body);
 
+  req.body = req.body || {};
+  req.body.createdTime = new Date();
+
   // todo: validate body of event.
 
   const query = { name: req.body.name };
 
   db.collection(DB_COLLECTION_NAME)
     .insertOne(req.body)
-    .then(() => res.status(201).end())
+    .then((doc) => {
+      res.send(doc.ops[0]).status(201).end()
+    })
     .catch(next);
 });
 
 app.get('/pixel/:id', (req, res, next) => {
   const db = req.app.locals.db;
 
-  // todo: add query parameters, max items returned
-  return next();
+  let options = {
+    root: __dirname + '/public/',
+    dotfiles: 'deny'
+  };
+
+  // todo: insert new 'viewed' record for this pixel if it exists
+  console.log('ip address:', req.connection.remoteAddress);
+
+  res.sendFile('000000.png', options);
 });
 
 app.get('/health', (req, res, next) => {

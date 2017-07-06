@@ -61,8 +61,11 @@ app.post('/trackings', (req, res, next) => {
 
   db.collection(DB_COLLECTION_NAME)
     .insertOne(req.body)
-    .then((doc) => {
-      res.send(doc.ops[0]).status(201).end()
+    .then((resp) => {
+      let doc = resp.ops[0];
+      doc.pixelUrl = process.env.TRACKER_URI + '/pixel/' + doc._id;
+
+      res.send(doc).status(201).end();
     })
     .catch(next);
 });
@@ -70,13 +73,21 @@ app.post('/trackings', (req, res, next) => {
 app.get('/pixel/:id', (req, res, next) => {
   const db = req.app.locals.db;
 
+  let userAgent = req.headers['user-agent'];
+  let ip = req.connection.remoteAddress;
+
+  db.collection(DB_COLLECTION_NAME)
+    .findOne({ _id: ObjectID(req.params.id) })
+    .then(doc => {
+      // todo: insert new 'viewed' record for this pixel if it exists
+      console.log(`updating ${doc._id} - ${ip} - ${userAgent}.`);
+    })
+    .catch((err) => console.log('error updating tracking...', err));
+
   let options = {
     root: __dirname + '/public/',
     dotfiles: 'deny'
   };
-
-  // todo: insert new 'viewed' record for this pixel if it exists
-  console.log('ip address:', req.connection.remoteAddress);
 
   res.sendFile('000000.png', options);
 });

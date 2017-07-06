@@ -8,6 +8,7 @@ import cors from 'cors';
 
 const debug = require('debug')('tracked-pixel-api');
 const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 const DB_COLLECTION_NAME = 'tracked-pixel';
 
 const app = express();
@@ -38,19 +39,23 @@ app.get('/trackings', (req, res, next) => {
 app.get('/trackings/:id', (req, res, next) => {
   const db = req.app.locals.db;
 
-  // todo: add query parameters, max items returned
-  return next();
+  db.collection(DB_COLLECTION_NAME)
+    .findOne({ _id: ObjectID(req.params.id) })
+    .then(doc => {
+      return res.send(doc);
+    })
+    .catch(next);
 });
 
 app.post('/trackings', (req, res, next) => {
   const db = req.app.locals.db;
 
-  debug('inserting new event', req.body);
+  debug('inserting new tracking pixel', req.body);
 
   req.body = req.body || {};
   req.body.createdTime = new Date();
 
-  // todo: validate body of event.
+  // todo: validate body of request.
 
   const query = { name: req.body.name };
 

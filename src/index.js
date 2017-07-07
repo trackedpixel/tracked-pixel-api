@@ -52,15 +52,16 @@ app.post('/trackings', (req, res, next) => {
 
   debug('inserting new tracking pixel', req.body);
 
-  req.body = req.body || {};
-  req.body.createdTime = new Date();
+  let newTracking = {
+    description: req.body.description,
+    createdTime: new Date(),
+    trackingViews: []
+  };
 
   // todo: validate body of request.
 
-  const query = { name: req.body.name };
-
   db.collection(DB_COLLECTION_NAME)
-    .insertOne(req.body)
+    .insertOne(newTracking)
     .then((resp) => {
       let doc = resp.ops[0];
       doc.pixelUrl = process.env.TRACKER_URI + '/pixel/' + doc._id;
@@ -73,15 +74,17 @@ app.post('/trackings', (req, res, next) => {
 app.get('/pixel/:id', (req, res, next) => {
   const db = req.app.locals.db;
 
-  let userAgent = req.headers['user-agent'];
-  let ip = req.connection.remoteAddress;
+  let trackingView = {
+    viewDate: new Date(),
+    ip: req.connection.remoteAddress,
+    userAgent: req.headers['user-agent']
+  }
 
   db.collection(DB_COLLECTION_NAME)
-    .findOne({ _id: ObjectID(req.params.id) })
-    .then(doc => {
-      // todo: insert new 'viewed' record for this pixel if it exists
-      console.log(`updating ${doc._id} - ${ip} - ${userAgent}.`);
-    })
+    .findOneAndUpdate(
+    { _id: ObjectID(req.params.id) },
+    { $push: { trackingViews: trackingView } },
+    { returnOriginal: false })
     .catch((err) => console.log('error updating tracking...', err));
 
   let options = {

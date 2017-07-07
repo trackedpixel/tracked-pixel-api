@@ -124,7 +124,7 @@ MongoClient.connect(process.env.MONGO_DB_URI)
     app.locals.db = db;
 
     // don't start the server until database connection is active and we are ready to accept connections
-    app.listen(8090, () => debug(`Listening on port 8090`));
+    app.listen(process.env.PORT, () => debug(`Listening on port ${process.env.PORT}`));
   });
 
 // handle shutting down express and closing database

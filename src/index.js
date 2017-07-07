@@ -53,6 +53,7 @@ app.post('/trackings', (req, res, next) => {
   debug('inserting new tracking pixel', req.body);
 
   let newTracking = {
+    ip: req.connection.remoteAddress,
     description: req.body.description,
     createdTime: new Date(),
     trackingViews: []

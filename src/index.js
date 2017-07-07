@@ -23,6 +23,10 @@ app.use(logger('dev', {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+function getPixelUrl(id) {
+  return process.env.TRACKER_URI + '/pixel/' + id + '.png';
+}
+
 // Routes
 app.get('/trackings', (req, res, next) => {
   const db = req.app.locals.db;
@@ -41,8 +45,13 @@ app.get('/trackings/:id', (req, res, next) => {
 
   db.collection(DB_COLLECTION_NAME)
     .findOne({ _id: ObjectID(req.params.id) })
-    .then(doc => {
-      return res.send(doc);
+    .then(trackingPixel => {
+      if (trackingPixel) {
+        trackingPixel.pixelUrl = getPixelUrl(trackingPixel._id);
+        return res.send(trackingPixel);
+      } else {
+        return next();
+      }
     })
     .catch(next);
 });
@@ -65,17 +74,25 @@ app.post('/trackings', (req, res, next) => {
     .insertOne(newTracking)
     .then((resp) => {
       let doc = resp.ops[0];
-      doc.pixelUrl = process.env.TRACKER_URI + '/pixel/' + doc._id;
+      doc.pixelUrl = getPixelUrl(doc._id);
 
       res.send(doc).status(201).end();
     })
     .catch(next);
 });
 
-app.get('/pixel/:id', (req, res, next) => {
+app.get('/pixel/:id.png', (req, res, next) => {
   const db = req.app.locals.db;
+  let id;
 
-  let trackingView = {
+  try {
+    id = ObjectID(req.params.id)
+  } catch (e) {
+    // not a valid id, call next()
+    return next();
+  }
+
+  const trackingView = {
     viewDate: new Date(),
     ip: req.connection.remoteAddress,
     userAgent: req.headers['user-agent']
@@ -83,7 +100,7 @@ app.get('/pixel/:id', (req, res, next) => {
 
   db.collection(DB_COLLECTION_NAME)
     .findOneAndUpdate(
-    { _id: ObjectID(req.params.id) },
+    { _id: id },
     { $push: { trackingViews: trackingView } },
     { returnOriginal: false })
     .catch((err) => console.log('error updating tracking...', err));

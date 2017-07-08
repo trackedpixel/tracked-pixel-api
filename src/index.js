@@ -6,12 +6,35 @@ import bodyParser from 'body-parser';
 import responseTime from 'response-time';
 import cors from 'cors';
 
+const jwt = require('express-jwt');
+const jwksRsa = require('jwks-rsa');
+
 const debug = require('debug')('tracked-pixel-api');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const DB_COLLECTION_NAME = 'tracked-pixel';
 
 const app = express();
+
+// Authentication middleware. When used, the
+// access token must exist and be verified against
+// the Auth0 JSON Web Key Set
+const checkJwt = jwt({
+  // Dynamically provide a signing key
+  // based on the kid in the header and
+  // the singing keys provided by the JWKS endpoint.
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: `https://trackedpixel.auth0.com/.well-known/jwks.json`
+  }),
+
+  // Validate the audience and the issuer.
+  audience: 'https://serene-garden-72300.herokuapp.com',
+  issuer: `https://trackedpixel.auth0.com/`,
+  algorithms: ['RS256']
+});
 
 app.disable('x-powered-by');
 
@@ -28,23 +51,23 @@ function getPixelUrl(id) {
 }
 
 // Routes
-app.get('/trackings', (req, res, next) => {
+app.get('/trackings', checkJwt, (req, res, next) => {
   const db = req.app.locals.db;
 
   // todo: add query parameters, max items returned
 
   db.collection(DB_COLLECTION_NAME)
-    .find()
+    .find({ sub: req.user.sub })
     .toArray()
     .then(items => res.json(items))
     .catch(next);
 });
 
-app.get('/trackings/:id', (req, res, next) => {
+app.get('/trackings/:id', checkJwt, (req, res, next) => {
   const db = req.app.locals.db;
 
   db.collection(DB_COLLECTION_NAME)
-    .findOne({ _id: ObjectID(req.params.id) })
+    .findOne({ _id: ObjectID(req.params.id), sub: req.user.sub })
     .then(trackingPixel => {
       if (trackingPixel) {
         trackingPixel.pixelUrl = getPixelUrl(trackingPixel._id);
@@ -56,12 +79,11 @@ app.get('/trackings/:id', (req, res, next) => {
     .catch(next);
 });
 
-app.post('/trackings', (req, res, next) => {
+app.post('/trackings', checkJwt, (req, res, next) => {
   const db = req.app.locals.db;
 
-  debug('inserting new tracking pixel', req.body);
-
   let newTracking = {
+    sub: req.user.sub,
     ip: req.connection.remoteAddress,
     description: req.body.description,
     createdTime: new Date(),

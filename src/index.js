@@ -5,14 +5,15 @@ import logger from 'morgan';
 import bodyParser from 'body-parser';
 import responseTime from 'response-time';
 import cors from 'cors';
+import * as db from 'mongodb';
 
 const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
 const iplocation = require('iplocation');
 
 const debug = require('debug')('tracked-pixel-api');
-const MongoClient = require('mongodb').MongoClient;
-const ObjectID = require('mongodb').ObjectID;
+const MongoClient = db.MongoClient;
+const ObjectID = db.ObjectID;
 const DB_COLLECTION_NAME = 'tracked-pixel';
 
 const app = express();
@@ -87,6 +88,15 @@ app.get('/trackings/:id', checkJwt, (req, res, next) => {
         return next();
       }
     })
+    .catch(next);
+});
+
+app.delete('/trackings/:id', checkJwt, (req, res, next) => {
+  const db = req.app.locals.db;
+
+  db.collection(DB_COLLECTION_NAME)
+    .remove({ _id: ObjectID(req.params.id), sub: req.user.sub })
+    .then(() => res.status(204).end())
     .catch(next);
 });
 

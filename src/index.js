@@ -117,12 +117,16 @@ app.post('/trackings', checkJwt, (req, res, next) => {
 app.get('/pixel/:id.png', (req, res, next) => {
   const db = req.app.locals.db;
   let id;
+  const options = {
+    root: __dirname + '/public/',
+    dotfiles: 'deny'
+  };
 
   try {
     id = ObjectID(req.params.id)
   } catch (e) {
     // not a valid id, call next()
-    return next();
+    return res.sendFile('000000.png', options);
   }
 
   let ip = getIpAddress(req);
@@ -142,11 +146,6 @@ app.get('/pixel/:id.png', (req, res, next) => {
       { returnOriginal: false })
       .catch((err) => console.log('error updating tracking...', err));
   });
-
-  let options = {
-    root: __dirname + '/public/',
-    dotfiles: 'deny'
-  };
 
   res.sendFile('000000.png', options);
 });

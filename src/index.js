@@ -58,7 +58,6 @@ function getIpAddress(req) {
     req.socket.remoteAddress ||
     req.connection.socket.remoteAddress;
 
-  console.log('got ip: ', ip);
   return ip;
 }
 

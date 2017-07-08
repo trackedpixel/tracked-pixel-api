@@ -8,6 +8,7 @@ import cors from 'cors';
 
 const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
+const iplocation = require('iplocation');
 
 const debug = require('debug')('tracked-pixel-api');
 const MongoClient = require('mongodb').MongoClient;
@@ -124,18 +125,23 @@ app.get('/pixel/:id.png', (req, res, next) => {
     return next();
   }
 
-  const trackingView = {
-    viewDate: new Date(),
-    ip: getIpAddress(req),
-    userAgent: req.headers['user-agent']
-  }
+  let ip = getIpAddress(req);
 
-  db.collection(DB_COLLECTION_NAME)
-    .findOneAndUpdate(
-    { _id: id },
-    { $push: { trackingViews: trackingView } },
-    { returnOriginal: false })
-    .catch((err) => console.log('error updating tracking...', err));
+  iplocation(ip, (error, res) => {
+    const trackingView = {
+      viewDate: new Date(),
+      ip: ip,
+      geo: res,
+      userAgent: req.headers['user-agent']
+    }
+
+    db.collection(DB_COLLECTION_NAME)
+      .findOneAndUpdate(
+      { _id: id },
+      { $push: { trackingViews: trackingView } },
+      { returnOriginal: false })
+      .catch((err) => console.log('error updating tracking...', err));
+  });
 
   let options = {
     root: __dirname + '/public/',

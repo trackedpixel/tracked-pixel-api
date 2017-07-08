@@ -50,6 +50,16 @@ function getPixelUrl(id) {
   return process.env.TRACKER_URI + '/pixel/' + id + '.png';
 }
 
+function getIpAddress(req) {
+  let ip = req.headers['x-forwarded-for'] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress;
+
+  console.log('got ip: ', ip);
+  return ip;
+}
+
 // Routes
 app.get('/trackings', checkJwt, (req, res, next) => {
   const db = req.app.locals.db;
@@ -84,7 +94,7 @@ app.post('/trackings', checkJwt, (req, res, next) => {
 
   let newTracking = {
     sub: req.user.sub,
-    ip: req.connection.remoteAddress,
+    ip: getIpAddress(req),
     description: req.body.description,
     createdTime: new Date(),
     trackingViews: []
@@ -116,7 +126,7 @@ app.get('/pixel/:id.png', (req, res, next) => {
 
   const trackingView = {
     viewDate: new Date(),
-    ip: req.connection.remoteAddress,
+    ip: getIpAddress(req),
     userAgent: req.headers['user-agent']
   }
 

@@ -154,7 +154,7 @@ app.get('/pixel/:id.png', (req, res, next) => {
       ip: ip,
       geo: res,
       userAgent: req.headers['user-agent']
-    }
+    };
 
     db.collection(DB_COLLECTION_NAME)
       .findOneAndUpdate(

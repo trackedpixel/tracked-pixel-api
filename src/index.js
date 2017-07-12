@@ -162,7 +162,7 @@ app.get('/pixel/:id.png', (req, res, next) => {
       { $push: { trackingViews: trackingView } },
       { returnOriginal: false })
       .then((doc) => {
-        const updatedTracking = JSON.stringify({ id, trackingView });
+        const updatedTracking = JSON.stringify({ id: id, description: doc.value.description });
         const channelName = 'private-' + doc.value.sub.replace('|', '_');
         pusher.trigger(channelName, 'tracking-pixel-update', updatedTracking);
       })

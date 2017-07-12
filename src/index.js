@@ -15,6 +15,14 @@ const debug = require('debug')('tracked-pixel-api');
 const MongoClient = db.MongoClient;
 const ObjectID = db.ObjectID;
 const DB_COLLECTION_NAME = 'tracked-pixel';
+const Pusher = require('pusher');
+
+const pusher = new Pusher({
+  appId: process.env.PUSHER_APPID,
+  key: process.env.PUSHER_KEY,
+  secret: process.env.PUSHER_SECRET,
+  cluster: process.env.PUSHER_CLUSTER
+});
 
 const app = express();
 
@@ -153,6 +161,11 @@ app.get('/pixel/:id.png', (req, res, next) => {
       { _id: id },
       { $push: { trackingViews: trackingView } },
       { returnOriginal: false })
+      .then((doc) => {
+        const updatedTracking = JSON.stringify({ id, trackingView });
+        const channelName = 'private-' + doc.value.sub.replace('|', '_');
+        pusher.trigger(channelName, 'tracking-pixel-update', updatedTracking);
+      })
       .catch((err) => console.log('error updating tracking...', err));
   });
 
@@ -165,6 +178,13 @@ app.get('/health', (req, res, next) => {
 
     res.json({ lastUpdated: stats.mtime.toISOString() });
   });
+});
+
+app.post('/pusher/auth', (req, res) => {
+  const socketId = req.body.socket_id;
+  const channel = req.body.channel_name;
+  const auth = pusher.authenticate(socketId, channel);
+  res.send(auth);
 });
 
 // Catch 404 and forward to error handler

@@ -7,8 +7,11 @@ MONGO_DB_URI=<mongodb connection string>
 TRACKER_URI=<url of this api>
 PORT=<port to run the api on>
 
+# Deploy to Heroku
+git push heroku master
 
-
+# Develop 
+npm start
 
 ## License
 MIT License. See the [LICENSE](LICENSE) file.

@@ -14,7 +14,6 @@ const iplocation = require('iplocation');
 const debug = require('debug')('tracked-pixel-api');
 const MongoClient = db.MongoClient;
 const ObjectID = db.ObjectID;
-const DB_COLLECTION_NAME = 'tracked-pixel';
 const Pusher = require('pusher');
 
 const pusher = new Pusher({

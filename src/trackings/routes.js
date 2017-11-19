@@ -1,3 +1,5 @@
+const DB_COLLECTION_NAME = 'tracked-pixel';
+
 function getPixelUrl(id) {
   return process.env.TRACKER_URI + '/pixel/' + id + '.png';
 }

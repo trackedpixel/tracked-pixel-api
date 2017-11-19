@@ -11,7 +11,7 @@ PORT=<port to run the api on>
 git push heroku master
 
 # Develop 
-npm start
+npm run dev
 
 ## License
 MIT License. See the [LICENSE](LICENSE) file.

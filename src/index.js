@@ -9,11 +9,9 @@ import * as db from 'mongodb';
 
 const jwt = require('express-jwt');
 const jwksRsa = require('jwks-rsa');
-const iplocation = require('iplocation');
 
 const debug = require('debug')('tracked-pixel-api');
 const MongoClient = db.MongoClient;
-const ObjectID = db.ObjectID;
 const Pusher = require('pusher');
 
 const pusher = new Pusher({
@@ -56,7 +54,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // Routes
-require('./trackings/routes')(app, checkJwt);
+require('./trackings/routes')(app, checkJwt, pusher);
 
 require('./names/routes')(app, checkJwt);
 

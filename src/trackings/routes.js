@@ -1,3 +1,6 @@
+import * as db from 'mongodb';
+const iplocation = require('iplocation');
+const ObjectID = db.ObjectID;
 const DB_COLLECTION_NAME = 'tracked-pixel';
 
 function getPixelUrl(id) {
@@ -13,7 +16,7 @@ function getIpAddress(req) {
   return ip;
 }
 
-module.exports = function (app, checkJwt) {
+module.exports = function (app, checkJwt, pusher) {
   app.get('/trackings', checkJwt, (req, res, next) => {
     const db = req.app.locals.db;
 

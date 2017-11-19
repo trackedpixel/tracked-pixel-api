@@ -1,3 +1,6 @@
+import * as db from 'mongodb';
+const ObjectID = db.ObjectID;
+
 module.exports = function (app) {
   app.get('/names', (req, res, next) => {
     const db = req.app.locals.db;

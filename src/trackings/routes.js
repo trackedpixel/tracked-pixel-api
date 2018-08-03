@@ -18,11 +18,11 @@ function getIpAddress(req) {
 
 module.exports = function (app, checkJwt, pusher) {
   app.get('/trackings', checkJwt, (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
     // todo: add query parameters, max items returned
 
-    db.collection(DB_COLLECTION_NAME)
+    client.db('trackedpixel').collection(DB_COLLECTION_NAME)
       .find({ sub: req.user.sub })
       .toArray()
       .then(items => res.json(items))
@@ -30,9 +30,9 @@ module.exports = function (app, checkJwt, pusher) {
   });
 
   app.get('/trackings/:id', checkJwt, (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
-    db.collection(DB_COLLECTION_NAME)
+    client.db('trackedpixel').collection(DB_COLLECTION_NAME)
       .findOne({ _id: ObjectID(req.params.id), sub: req.user.sub })
       .then(trackingPixel => {
         if (trackingPixel) {
@@ -46,16 +46,16 @@ module.exports = function (app, checkJwt, pusher) {
   });
 
   app.delete('/trackings/:id', checkJwt, (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
-    db.collection(DB_COLLECTION_NAME)
+    client.db('trackedpixel').collection(DB_COLLECTION_NAME)
       .remove({ _id: ObjectID(req.params.id), sub: req.user.sub })
       .then(() => res.status(204).end())
       .catch(next);
   });
 
   app.post('/trackings', checkJwt, (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
     let newTracking = {
       sub: req.user.sub,
@@ -67,7 +67,7 @@ module.exports = function (app, checkJwt, pusher) {
 
     // todo: validate body of request.
 
-    db.collection(DB_COLLECTION_NAME)
+    client.db('trackedpixel').collection(DB_COLLECTION_NAME)
       .insertOne(newTracking)
       .then((resp) => {
         let doc = resp.ops[0];
@@ -79,7 +79,7 @@ module.exports = function (app, checkJwt, pusher) {
   });
 
   app.get('/pixel/:id.png', (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
     let id;
     const options = {
       root: __dirname + '/public/',
@@ -103,7 +103,7 @@ module.exports = function (app, checkJwt, pusher) {
         userAgent: req.headers['user-agent']
       };
 
-      db.collection(DB_COLLECTION_NAME)
+      client.db('trackedpixel').collection(DB_COLLECTION_NAME)
         .findOneAndUpdate(
         { _id: id },
         { $push: { trackingViews: trackingView } },

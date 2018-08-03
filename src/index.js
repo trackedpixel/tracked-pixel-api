@@ -58,6 +58,8 @@ require('./trackings/routes')(app, checkJwt, pusher);
 
 require('./names/routes')(app, checkJwt);
 
+require('./osc/routes')(app, checkJwt);
+
 app.get('/health', (req, res, next) => {
   fs.stat(__filename, (err, stats) => {
     if (err) return next(err);
@@ -92,9 +94,9 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 debug('connecting to database: ' + process.env.MONGO_DB_URI);
 
 MongoClient.connect(process.env.MONGO_DB_URI)
-  .then((db) => {
+  .then((client) => {
     debug('connected to database: ' + process.env.MONGO_DB_URI);
-    app.locals.db = db;
+    app.locals.client = client;
 
     // don't start the server until database connection is active and we are ready to accept connections
     app.listen(process.env.PORT, () => debug(`Listening on port ${process.env.PORT}`));
@@ -108,10 +110,10 @@ let cleanup = function () {
 
     isShuttingDown = true;
 
-    if (app.locals.db) {
+    if (app.locals.client) {
       debug('closing database!');
-      app.locals.db.close(() => {
-        app.locals.db = null;
+      app.locals.client.close(() => {
+        app.locals.client = null;
         debug('shutting down process');
         process.exit(0);
       });

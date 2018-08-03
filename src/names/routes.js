@@ -3,9 +3,9 @@ const ObjectID = db.ObjectID;
 
 module.exports = function (app) {
   app.get('/names', (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
-    db.collection("names")
+    client.db('trackedpixel').collection("names")
       .find()
       .toArray()
       .then(items => res.json(items))
@@ -13,7 +13,7 @@ module.exports = function (app) {
   });
 
   app.post('/names', (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
     let newName = {
       name: req.body.name,
@@ -23,7 +23,7 @@ module.exports = function (app) {
 
     // todo: validate body of request.
 
-    db.collection("names")
+    client.db('trackedpixel').collection("names")
       .insertOne(newName)
       .then((resp) => {
         let doc = resp.ops[0];
@@ -34,9 +34,9 @@ module.exports = function (app) {
   });
 
   app.put('/names/:id/up-vote', (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
-    db.collection("names")
+    client.db('trackedpixel').collection("names")
       .findOneAndUpdate(
       { _id: ObjectID(req.params.id) },
       { $inc: { "votes": 1 } },
@@ -48,9 +48,9 @@ module.exports = function (app) {
   });
 
   app.put('/names/:id/down-vote', (req, res, next) => {
-    const db = req.app.locals.db;
+    const client = req.app.locals.client;
 
-    db.collection("names")
+    client.db('trackedpixel').collection("names")
       .findOneAndUpdate(
       { _id: ObjectID(req.params.id) },
       { $inc: { "votes": -1 } },

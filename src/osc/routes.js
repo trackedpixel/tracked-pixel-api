@@ -21,9 +21,9 @@ module.exports = function (app, checkJwt) {
     client.db('trackedpixel').collection("osc-events")
       .insertMany(newItems)
       .then((resp) => {
-        let doc = resp.ops[0];
+        let docs = resp.ops;
 
-        res.send(doc).status(201).end();
+        res.send(docs).status(201).end();
       })
       .catch(next);
   });

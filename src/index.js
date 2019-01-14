@@ -60,6 +60,8 @@ require('./names/routes')(app, checkJwt);
 
 require('./osc/routes')(app, checkJwt);
 
+require('./bookmarks/routes')(app, checkJwt);
+
 app.get('/health', (req, res, next) => {
   fs.stat(__filename, (err, stats) => {
     if (err) return next(err);
